@@ -9545,10 +9545,16 @@ function renderStory(topic) {
   const relatedTopics = getRelatedTopics(topic);
 
   storyReader.innerHTML = `
-    ${buildTopicVisual(topic, "hero")}
+    <div class="story-photo-hero" style="background-image:url('${topic.image}')">
+      <div class="story-photo-meta">
+        <p class="eyebrow">${topic.category} / ${topic.subcategory}</p>
+        <h3>${topic.title}</h3>
+        <div class="story-location-tag">
+          <i data-lucide="map-pin"></i>${topic.location}
+        </div>
+      </div>
+    </div>
     <div class="story-body">
-      <p class="eyebrow">${topic.category} / ${topic.subcategory}</p>
-      <h3>${topic.title}</h3>
       <div class="story-facts">
         <div>
           <span>ตำแหน่ง</span>
@@ -9577,7 +9583,7 @@ function renderStory(topic) {
       <div class="related-map-panel" aria-label="ตัวอย่างสถานที่เกี่ยวข้องบนแผนที่">
         <div class="related-map-heading">
           <h4>ตัวอย่างสถานที่เกี่ยวข้องบนแผนที่</h4>
-          <p>กดเพื่อโยงเรื่องนี้กับพื้นที่จริงอื่น ๆ ที่ใช้แนวคิด ภูมิอากาศ หรือกระบวนการใกล้เคียงกัน แล้วดูหมุดบนแผนที่ต่อได้ทันที</p>
+          <p>กดเพื่อโยงเรื่องนี้กับพื้นที่จริงอื่น ๆ แล้วดูหมุดดาวเทียมด้านล่างได้ทันที</p>
         </div>
         <div class="related-map-list">
           ${relatedTopics
@@ -9596,8 +9602,11 @@ function renderStory(topic) {
       </div>
       <div class="reader-actions">
         <a href="https://www.openstreetmap.org/?mlat=${topic.coords[0]}&mlon=${topic.coords[1]}#map=${topic.zoom}/${topic.coords[0]}/${topic.coords[1]}" target="_blank" rel="noreferrer">
-          เปิดตำแหน่งจริง
+          <i data-lucide="external-link"></i>เปิดใน OpenStreetMap
         </a>
+        <button type="button" class="reader-map-btn" id="readerOpenMapBtn">
+          <i data-lucide="satellite"></i>ดูบนแผนที่ดาวเทียม
+        </button>
       </div>
     </div>
   `;
@@ -9605,7 +9614,27 @@ function renderStory(topic) {
   storyReader.querySelectorAll("[data-related-topic]").forEach((button) => {
     button.addEventListener("click", () => selectTopic(button.dataset.relatedTopic, false));
   });
+
+  const openMapBtn = document.getElementById("readerOpenMapBtn");
+  if (openMapBtn) {
+    openMapBtn.addEventListener("click", () => {
+      const panel = document.getElementById("mapPanel");
+      const toggleBtn = document.getElementById("mapToggleBtn");
+      if (panel && !panel.classList.contains("visible")) {
+        panel.classList.add("visible");
+        panel.setAttribute("aria-hidden", "false");
+        toggleBtn.classList.add("active");
+        toggleBtn.setAttribute("aria-expanded", "true");
+        setTimeout(() => { if (map) map.invalidateSize(); }, 50);
+      }
+      panel.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  refreshIcons();
 }
+
+let satelliteLayer, streetLayer;
 
 function initializeMap() {
   map = L.map("map", {
@@ -9613,10 +9642,53 @@ function initializeMap() {
     worldCopyJump: true,
   }).setView(activeTopic.coords, activeTopic.zoom);
 
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  satelliteLayer = L.tileLayer(
+    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    {
+      maxZoom: 18,
+      attribution:
+        "Tiles &copy; Esri &mdash; Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, GIS User Community",
+    },
+  );
+
+  streetLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 18,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-  }).addTo(map);
+  });
+
+  satelliteLayer.addTo(map);
+
+  // Layer toggle buttons
+  document.querySelectorAll(".map-layer-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".map-layer-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      if (btn.dataset.layer === "satellite") {
+        map.removeLayer(streetLayer);
+        satelliteLayer.addTo(map);
+      } else {
+        map.removeLayer(satelliteLayer);
+        streetLayer.addTo(map);
+      }
+    });
+  });
+
+  // Map panel toggle
+  const mapToggleBtn = document.getElementById("mapToggleBtn");
+  const mapPanel = document.getElementById("mapPanel");
+
+  mapToggleBtn.addEventListener("click", () => {
+    const isOpen = mapPanel.classList.toggle("visible");
+    mapToggleBtn.classList.toggle("active", isOpen);
+    mapToggleBtn.setAttribute("aria-expanded", String(isOpen));
+    mapPanel.setAttribute("aria-hidden", String(!isOpen));
+    if (isOpen) {
+      setTimeout(() => map.invalidateSize(), 50);
+      mapToggleBtn.querySelector("span").textContent = "ปิดแผนที่";
+    } else {
+      mapToggleBtn.querySelector("span").textContent = "แสดงแผนที่ดาวเทียม";
+    }
+  });
 
   clusterGroup = L.markerClusterGroup({ chunkedLoading: true, maxClusterRadius: 60 });
 
@@ -9640,14 +9712,23 @@ function selectTopic(topicId, shouldScroll) {
   history.replaceState(null, "", "#" + topic.id);
   renderStory(topic);
 
+  const hint = document.getElementById("mapLocationHint");
+  if (hint) hint.textContent = topic.location;
+
   if (shouldScroll) {
     document.querySelector("#map-section").scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  clusterGroup.zoomToShowLayer(markers[topic.id], () => {
-    map.setView(topic.coords, Math.max(map.getZoom(), topic.zoom), { animate: true });
-    markers[topic.id].openPopup();
-  });
+  const mapPanel = document.getElementById("mapPanel");
+  const isMapOpen = mapPanel && mapPanel.classList.contains("visible");
+
+  map.setView(topic.coords, topic.zoom, { animate: false });
+
+  if (isMapOpen) {
+    clusterGroup.zoomToShowLayer(markers[topic.id], () => {
+      markers[topic.id].openPopup();
+    });
+  }
 }
 
 let searchDebounceTimer;
@@ -9676,5 +9757,6 @@ renderTopics();
 renderStory(activeTopic);
 initializeMap();
 renderRoutes();
-clusterGroup.zoomToShowLayer(markers[activeTopic.id], () => markers[activeTopic.id].openPopup());
+const initHint = document.getElementById("mapLocationHint");
+if (initHint) initHint.textContent = activeTopic.location;
 refreshIcons();
