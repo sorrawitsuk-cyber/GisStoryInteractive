@@ -10510,9 +10510,9 @@ function getUnsplashPhotoId(imageUrl = "") {
   return imageUrl.match(/photo-([^?]+)/)?.[1] || "";
 }
 
-function getSatelliteTileImage(topic) {
+function getSatelliteTileImage(topic, zoomOverride) {
   const [lat, lon] = topic.coords;
-  const zoom = Math.max(5, Math.min(10, topic.zoom || 8));
+  const zoom = Math.max(5, Math.min(10, zoomOverride ?? topic.zoom ?? 8));
   const latRad = (lat * Math.PI) / 180;
   const scale = 2 ** zoom;
   const x = Math.floor(((lon + 180) / 360) * scale);
@@ -10592,6 +10592,128 @@ function buildAiIllustrationPanel(topic, guide) {
         <h2>ภาพประกอบและแผนภาพตามหัวข้อนี้</h2>
         <p>${guide.mapReading}</p>
         <div class="ai-feature-chips" aria-label="Key visual clues">${featureChips}</div>
+      </div>
+    </section>
+  `;
+}
+
+function buildPlaceGallery(topic) {
+  const displayImage = getTopicDisplayImage(topic);
+  const closeZoom = Math.max(7, Math.min(10, topic.zoom || 8));
+  const regionalZoom = Math.max(5, closeZoom - 2);
+  const contextZoom = Math.max(5, closeZoom - 3);
+  const candidates = [
+    {
+      url: displayImage,
+      label: isGenericStockImage(topic) ? "ภาพดาวเทียมตำแหน่งจริง" : "ภาพสถานที่จริง",
+      note: topic.location,
+    },
+    {
+      url: getSatelliteTileImage(topic, closeZoom),
+      label: "ภาพดาวเทียมระยะใกล้",
+      note: "ใช้ดูรูปร่างภูมิประเทศและร่องรอยบนผิวดิน",
+    },
+    {
+      url: getSatelliteTileImage(topic, regionalZoom),
+      label: "บริบทรอบพื้นที่",
+      note: "ใช้ดูความสัมพันธ์กับภูเขา แม่น้ำ ชายฝั่ง เมือง หรือทะเลโดยรอบ",
+    },
+    {
+      url: getSatelliteTileImage(topic, contextZoom),
+      label: "ภาพรวมระดับภูมิภาค",
+      note: topic.scale,
+    },
+  ];
+  const seen = new Set();
+  const images = candidates.filter((item) => {
+    if (!item.url || seen.has(item.url)) return false;
+    seen.add(item.url);
+    return true;
+  });
+
+  return `
+    <section class="article-section place-gallery-section">
+      <h2 class="article-section-title">
+        <i data-lucide="images"></i>
+        รูปภาพสถานที่จริง
+      </h2>
+      <div class="place-gallery">
+        ${images
+          .map(
+            (item) => `
+              <figure class="place-photo-card">
+                <img src="${item.url}" alt="${item.label}: ${topic.title}" loading="lazy">
+                <figcaption>
+                  <strong>${item.label}</strong>
+                  <span>${item.note}</span>
+                </figcaption>
+              </figure>
+            `,
+          )
+          .join("")}
+      </div>
+    </section>
+  `;
+}
+
+function buildFocusedArticle(topic, guide) {
+  const pointText = topic.points?.length ? topic.points.join(" ") : "";
+  return `
+    <section class="article-section longread-section">
+      <h2 class="article-section-title">
+        <i data-lucide="book-open"></i>
+        เรื่องราวของสถานที่นี้
+      </h2>
+      <div class="longread-copy">
+        <p>${topic.story}</p>
+        <p>${topic.title} อยู่ในบริบทของ ${topic.location} และมีขอบเขตสำคัญคือ ${topic.scale} จุดเด่นของพื้นที่นี้คือ ${topic.keyConcept} ซึ่งทำให้สถานที่นี้เป็นตัวอย่างที่ดีของการอ่านภูมิประเทศจากหลักฐานจริงบนพื้นผิวโลก ไม่ว่าจะเป็นรูปทรงพื้นที่ ชั้นหิน น้ำ พืชพรรณ เมือง หรือร่องรอยความเสี่ยงที่สะสมตามเวลา</p>
+        <p>ประวัติของพื้นที่นี้ไม่ได้เกิดขึ้นจากเหตุการณ์เดียว แต่เป็นผลจากกระบวนการธรรมชาติที่ดำเนินต่อเนื่องยาวนาน ร่วมกับการใช้พื้นที่ของมนุษย์ในช่วงเวลาหลัง ๆ เมื่อมองผ่านภาพถ่าย แผนที่ และภาพดาวเทียม เราจึงเห็นทั้งอดีตทางธรณีหรือภูมิอากาศ และปัจจุบันที่ผู้คนต้องปรับตัวอยู่กับพื้นที่นั้น</p>
+      </div>
+    </section>
+
+    <section class="article-section longread-section">
+      <h2 class="article-section-title">
+        <i data-lucide="workflow"></i>
+        กระบวนการเกิด
+      </h2>
+      <p class="article-definition">${guide.definition}</p>
+      <ol class="article-steps article-steps-long">
+        ${guide.formation.map((step, i) => `<li><span>${i + 1}</span><p>${step}</p></li>`).join("")}
+      </ol>
+      <div class="article-map-reading">
+        <i data-lucide="map"></i>
+        <p><strong>วิธีอ่านจากภาพและแผนที่: </strong>${guide.mapReading}</p>
+      </div>
+    </section>
+
+    <section class="article-section longread-section">
+      <h2 class="article-section-title">
+        <i data-lucide="landmark"></i>
+        ร่องรอยสำคัญที่ควรสังเกต
+      </h2>
+      <div class="evidence-grid">
+        ${guide.landforms
+          .slice(0, 6)
+          .map(
+            (item) => `
+              <article>
+                <strong>${item}</strong>
+                <p>ใช้เป็นหลักฐานช่วยอธิบายว่า ${topic.keyConcept} ทำงานในพื้นที่นี้อย่างไร</p>
+              </article>
+            `,
+          )
+          .join("")}
+      </div>
+    </section>
+
+    <section class="article-section longread-section">
+      <h2 class="article-section-title">
+        <i data-lucide="users"></i>
+        ความสำคัญต่อผู้คนและสิ่งแวดล้อม
+      </h2>
+      <div class="longread-copy">
+        <p>${topic.whyItMatters}</p>
+        <p>${pointText}</p>
       </div>
     </section>
   `;
@@ -10719,42 +10841,12 @@ function renderStory(topic) {
   const guide = buildAcademicGuide(topic);
   const svgInfographic = buildSvgInfographic(topic);
   const processInfographic = svgInfographic ? "" : buildProcessInfographic(topic);
-  const relatedTopics = getRelatedTopics(topic);
   const displayImage = getTopicDisplayImage(topic);
 
-  const formationSteps = guide.formation
-    .map((step, i) => `<li><span>${i + 1}</span><p>${step}</p></li>`)
-    .join("");
-
-  const typesHtml = guide.types
-    .map((t) => `<li>${t}</li>`)
-    .join("");
-
-  const landformsHtml = guide.landforms
-    .map((l) => `<li>${l}</li>`)
-    .join("");
-
-  const pointsHtml = topic.points
-    .map((p) => `<li>${p}</li>`)
-    .join("");
-
-  const relatedHtml = relatedTopics
-    .map(
-      (rt) => `
-      <button type="button" data-related-topic="${rt.id}" class="related-article-card">
-        <span class="related-cat">${rt.category} / ${rt.subcategory}</span>
-        <strong>${rt.title}</strong>
-        <small>${rt.location}</small>
-        <em>${getRelatedReason(topic, rt)}</em>
-      </button>`,
-    )
-    .join("");
-
   storyReader.innerHTML = `
-    <!-- Photo hero -->
     <div class="story-photo-hero" style="background-image:url('${displayImage}')">
       <div class="story-photo-meta">
-        <span class="article-category-badge">${topic.category} · ${topic.subcategory}</span>
+        <span class="article-category-badge">${topic.category} / ${topic.subcategory}</span>
         <h1>${topic.title}</h1>
         <div class="story-location-tag">
           <i data-lucide="map-pin"></i>${topic.location}
@@ -10762,83 +10854,21 @@ function renderStory(topic) {
       </div>
     </div>
 
-    <!-- Article body -->
-    <div class="article-body">
-
-      <!-- Lead -->
+    <div class="article-body article-body-focused">
       <p class="article-lead">${topic.summary}</p>
 
-      <!-- Story / Travel narrative -->
-      <section class="article-section">
-        <p class="article-story-text">${topic.story}</p>
-        <div class="article-why">
-          <strong>Why it matters</strong>
-          <p>${topic.whyItMatters}</p>
-        </div>
-      </section>
+      ${buildFocusedArticle(topic, guide)}
 
-      ${buildAiIllustrationPanel(topic, guide)}
-
-      <!-- Infographic -->
-      ${svgInfographic || ""}
-      ${processInfographic}
-
-      <!-- The Geography (Science) -->
-      <section class="article-section article-science">
+      <section class="article-section diagram-section">
         <h2 class="article-section-title">
-          <i data-lucide="graduation-cap"></i>
-          The Geography
+          <i data-lucide="chart-no-axes-combined"></i>
+          แผนภาพกระบวนการ
         </h2>
-        <p class="article-definition">${guide.definition}</p>
-
-        ${buildTypeGallery(guide.typeGallery, topic)}
-
-        <h3 class="article-sub-title">How it forms</h3>
-        <ol class="article-steps">
-          ${formationSteps}
-        </ol>
-
-        <div class="article-two-col">
-          <div>
-            <h3 class="article-sub-title">Types</h3>
-            <ul class="article-list">${typesHtml}</ul>
-          </div>
-          <div>
-            <h3 class="article-sub-title">Landforms &amp; Features</h3>
-            <ul class="article-list">${landformsHtml}</ul>
-          </div>
-        </div>
-
-        <div class="article-map-reading">
-          <i data-lucide="map"></i>
-          <p><strong>How to read the map: </strong>${guide.mapReading}</p>
-        </div>
+        ${svgInfographic || processInfographic}
       </section>
 
-      <!-- Key Facts -->
-      <section class="article-section">
-        <h2 class="article-section-title">
-          <i data-lucide="list-checks"></i>Key Facts
-        </h2>
-        <div class="article-facts-grid">
-          <div><span>Location</span><strong>${topic.location}</strong></div>
-          <div><span>Scale</span><strong>${topic.scale}</strong></div>
-          <div><span>Key Concept</span><strong>${topic.keyConcept}</strong></div>
-          <div><span>Climate</span><strong>${topic.climate}</strong></div>
-        </div>
-        <ul class="article-points">${pointsHtml}</ul>
-      </section>
+      ${buildPlaceGallery(topic)}
 
-      <!-- Explore More -->
-      <section class="article-section">
-        <h2 class="article-section-title">
-          <i data-lucide="globe"></i>Explore More
-        </h2>
-        <p class="article-explore-desc">Similar geography, climate, or processes — click to read another article.</p>
-        <div class="related-article-grid">${relatedHtml}</div>
-      </section>
-
-      <!-- Actions -->
       <div class="article-actions">
         <a class="article-action-link"
            href="https://www.openstreetmap.org/?mlat=${topic.coords[0]}&mlon=${topic.coords[1]}#map=${topic.zoom}/${topic.coords[0]}/${topic.coords[1]}"
@@ -10849,17 +10879,8 @@ function renderStory(topic) {
           <i data-lucide="satellite"></i>ดูแผนที่ดาวเทียม
         </button>
       </div>
-
-    </div><!-- /article-body -->
+    </div>
   `;
-
-  storyReader.querySelectorAll("[data-related-topic]").forEach((btn) => {
-    btn.addEventListener("click", () => selectTopic(btn.dataset.relatedTopic, false));
-  });
-
-  storyReader.querySelectorAll("[data-story-link]").forEach((btn) => {
-    btn.addEventListener("click", () => selectTopic(btn.dataset.storyLink, false));
-  });
 
   const openMapBtn = document.getElementById("readerOpenMapBtn");
   if (openMapBtn) {
