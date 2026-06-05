@@ -752,6 +752,8 @@ img {
   margin: -10px 0 24px;
 }
 
+.quick-search-group[hidden] { display: none !important; }
+
 .quick-search {
   min-height: 34px;
   padding: 0 11px;
@@ -1096,6 +1098,8 @@ img {
 .fb-clear:hover { background: rgba(220, 38, 38, 0.12); color: #dc2626; }
 
 /* Discipline overview cards */
+.category-overview[hidden] { display: none !important; }
+
 .category-overview {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

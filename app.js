@@ -8419,6 +8419,7 @@ function renderDisciplineNav() {
       renderDisciplinePanel();
       updateFilterBreadcrumb();
       renderCategoryOverview();
+      renderQuickSearches();
       renderTopics();
     });
   });
@@ -8498,6 +8499,7 @@ function updateFilterBreadcrumb() {
     renderDisciplinePanel();
     updateFilterBreadcrumb();
     renderCategoryOverview();
+    renderQuickSearches();
     renderTopics();
   });
 }
@@ -8530,6 +8532,7 @@ function renderCategoryOverview() {
       renderDisciplinePanel();
       updateFilterBreadcrumb();
       renderCategoryOverview();
+      renderQuickSearches();
       renderTopics();
       document.querySelector("#library").scrollIntoView({ behavior: "smooth", block: "start" });
     });
@@ -8540,6 +8543,13 @@ function renderCategoryOverview() {
 function renderQuickSearches() {
   if (!quickSearchGroup) return;
 
+  // When a discipline is active, hide keyword chips — the discipline panel is the navigation
+  if (activeDisciplineId !== null) {
+    quickSearchGroup.hidden = true;
+    return;
+  }
+  quickSearchGroup.hidden = false;
+
   quickSearchGroup.innerHTML = quickSearches
     .map((keyword) => `<button type="button" class="quick-search" data-keyword="${keyword}">${keyword}</button>`)
     .join("");
@@ -8549,15 +8559,12 @@ function renderQuickSearches() {
       const kw = button.dataset.keyword;
       const conceptKey = KEYWORD_TO_CONCEPT[kw];
 
-      // Always filter the topic grid
       searchInput.value = kw;
       renderTopics();
 
-      // Show concept textbook if mapped
       if (conceptKey) {
         renderConceptTextbook(conceptKey);
       } else {
-        // No concept mapped: just scroll to results
         document.querySelector("#library").scrollIntoView({ behavior: "smooth", block: "start" });
       }
     });
@@ -10510,6 +10517,17 @@ function buildLongArticle(topic, guide) {
   `;
 }
 
+function getTopicDisciplineLabel(topic) {
+  const entries = TOPIC_TAXONOMY_MAP[topic.id] || [];
+  if (entries.length === 0) return topic.subcategory;
+  // Prefer the currently active discipline so the label matches the filter context
+  const e = (activeDisciplineId && entries.find(x => x.disciplineId === activeDisciplineId)) || entries[0];
+  const disc = TAXONOMY.find(d => d.id === e.disciplineId);
+  const main = disc?.mainTopics.find(m => m.id === e.mainTopicId);
+  if (disc && main) return `${disc.label} · ${main.label}`;
+  return topic.subcategory;
+}
+
 function buildTopicCards(topicList) {
   return topicList
     .map(
@@ -10517,7 +10535,7 @@ function buildTopicCards(topicList) {
         <article class="topic-card">
           ${buildTopicVisual(topic)}
           <div class="topic-card-content">
-            <span class="topic-label">${topic.category} / ${topic.subcategory}</span>
+            <span class="topic-label">${getTopicDisciplineLabel(topic)}</span>
             <h3>${topic.title}</h3>
             <p>${topic.summary}</p>
             <div class="topic-meta">
