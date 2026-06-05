@@ -66,17 +66,22 @@
             <p class="eyebrow">Interactive Encyclopedia</p>
             <h2 id="library-title">คลังสารานุกรมภูมิศาสตร์</h2>
             <p>
-              <strong id="categoryCount">5</strong> หมวดหลัก — ภูมิประเทศ ภูมิอากาศ น้ำและชายฝั่ง ภัยพิบัติ ทรัพยากรและมนุษย์
+              <strong id="categoryCount">8</strong> สาขาวิชา — ธรณีวิทยา · ธรณีสัณฐาน · อุทกวิทยา · สมุทรศาสตร์ · ภูมิอากาศ · นิเวศ · มนุษย์ · ภัยธรรมชาติ
             </p>
           </div>
+
+          <!-- Discipline navigation -->
+          <div class="discipline-nav" id="disciplineNav" aria-label="Academic disciplines"></div>
+          <!-- Main-topic + sub-topic drill-down panel -->
+          <div class="discipline-panel" id="disciplinePanel" hidden></div>
 
           <div class="toolbar" aria-label="Search tools">
             <label class="search-box">
               <i data-lucide="search"></i>
               <span class="sr-only">Search geography articles</span>
-              <input id="searchInput" type="search" placeholder="Search: volcano, monsoon, glacier, delta, coral reef…" />
+              <input id="searchInput" type="search" placeholder="ค้นหา: ภูเขาไฟ มรสุม ธารน้ำแข็ง ดินดอน ปะการัง…" />
             </label>
-            <div class="filter-group" id="filterGroup" aria-label="Category filters"></div>
+            <div class="filter-breadcrumb" id="filterGroup" hidden aria-label="Active filter"></div>
           </div>
 
           <div class="quick-search-group" id="quickSearchGroup" aria-label="Quick search"></div>

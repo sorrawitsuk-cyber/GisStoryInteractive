@@ -770,6 +770,248 @@ function renderConceptTextbook(conceptKey) {
   refreshIcons();
 }
 
+// ─── Academic Taxonomy ────────────────────────────────────────────────────────
+
+const TAXONOMY = [
+  {
+    id: "geology", label: "ธรณีวิทยา", labelEn: "Geology",
+    icon: "layers", color: "#b45309", colorLight: "#fef3c7",
+    mainTopics: [
+      { id: "plate-tectonics", label: "ธรณีแปรสัณฐาน", icon: "triangle", subTopics: [
+        { id: "plate-boundaries", label: "รอยต่อแผ่นธรณี", topicIds: ["ring-of-fire","ring-of-fire-indonesia","mid-atlantic-ridge-seafloor","san-andreas-fault"] },
+        { id: "fold-mountains",   label: "ภูเขาพับตัว",    topicIds: ["himalaya","andes","alps","atlas-mountains","pamir-knot"] },
+        { id: "rift-valleys",     label: "ริฟต์วัลเลย์",   topicIds: ["east-african-rift","red-sea-rift","dead-sea-rift","lake-tanganyika-rift","iceland"] },
+      ]},
+      { id: "volcanology", label: "ภูเขาไฟวิทยา", icon: "flame", subTopics: [
+        { id: "active-volcanoes", label: "ภูเขาไฟมีพลัง",    topicIds: ["hawaii-hotspot","mount-fuji","pinatubo","lahar-merapi","etna-ashfall-sicily","la-palma-lava-delta","mount-st-helens"] },
+        { id: "geothermal",       label: "ความร้อนใต้พิภพ",  topicIds: ["yellowstone","yellowstone-geothermal","yellowstone-geysers","iceland"] },
+        { id: "volcanic-terrain", label: "ภูมิประเทศภูเขาไฟ", topicIds: ["cappadocia","cappadocia-tuff","cappadocia-tuff-landscape","giants-causeway","java-volcanic-soils"] },
+      ]},
+      { id: "karst", label: "คาร์สต์หินปูน", icon: "mountain", subTopics: [
+        { id: "tower-karst",   label: "หินปูนโดดและถ้ำ", topicIds: ["guilin-karst","ha-long-bay-karst","phang-nga-bay","krabi-karst"] },
+        { id: "karst-springs", label: "น้ำพุคาร์สต์",     topicIds: ["karst-spring-dinaric-alps"] },
+      ]},
+      { id: "rock-landforms", label: "ภูมิประเทศหินแข็ง", icon: "hexagon", subTopics: [
+        { id: "canyons",    label: "แคนยอนและหุบผา", topicIds: ["grand-canyon","colorado-river-water"] },
+        { id: "plateaus",   label: "ที่ราบสูง",       topicIds: ["tibetan-plateau","deccan-plateau","altiplano-puna-highland","khorat-plateau"] },
+        { id: "inselbergs", label: "เนินหินโดด",      topicIds: ["guiana-shield-tepui","canadian-shield","badlands-south-dakota"] },
+      ]},
+    ]
+  },
+
+  {
+    id: "geomorphology", label: "ธรณีสัณฐานวิทยา", labelEn: "Geomorphology",
+    icon: "mountain-snow", color: "#047857", colorLight: "#d1fae5",
+    mainTopics: [
+      { id: "glacial", label: "ธารน้ำแข็ง", icon: "snowflake", subTopics: [
+        { id: "alpine-glaciers", label: "ธารน้ำแข็งภูเขา",   topicIds: ["alps","alps-glacier-retreat","karakoram-glaciers","patagonia","patagonian-icefields","vatnajokull-glacier","himalaya-snowline-shift"] },
+        { id: "ice-sheets",      label: "แผ่นน้ำแข็งทวีป",   topicIds: ["antarctic-ice-sheet","greenland-ice-sheet-mass-balance","laurentide-ice-sheet-legacy","arctic-sea-ice"] },
+        { id: "fjords",          label: "fjord",              topicIds: ["norway-fjords","norwegian-fjords","yosemite-valley"] },
+        { id: "periglacial",     label: "รอบธารน้ำแข็ง",    topicIds: ["svalbard-tundra","antarctic-dry-valleys","lapland-reindeer-climate","yakutsk-permafrost-city","siberian-permafrost"] },
+      ]},
+      { id: "arid-landforms", label: "ภูมิประเทศแห้งแล้ง", icon: "sun", subTopics: [
+        { id: "sand-seas",      label: "ทะเลทรายทราย",    topicIds: ["sahara","rub-al-khali-erg","taklamakan-desert-basin","white-sands-gypsum-dunes"] },
+        { id: "rocky-desert",   label: "ทะเลทรายหิน",     topicIds: ["wadi-rum","lut-desert-yardangs","gobi","central-asian-steppe"] },
+        { id: "coastal-desert", label: "ทะเลทรายชายฝั่ง", topicIds: ["namib-desert","namib-fog-desert","namib-coastal-desert","atacama","atacama-desert"] },
+        { id: "closed-basins",  label: "แอ่งปิดและซาบคา", topicIds: ["death-valley-playa","chott-el-jerid-sabkha","great-salt-lake","danakil-depression","danakil-depression-deep-dive","salar-de-uyuni","salar-uyuni"] },
+      ]},
+      { id: "fluvial", label: "ภูมิประเทศแม่น้ำ", icon: "git-branch", subTopics: [
+        { id: "meanders",       label: "คดเคี้ยวและออกซ์โบว์", topicIds: ["amazon","mississippi-meander-oxbow","mississippi-floodplain","loess-plateau"] },
+        { id: "deltas",         label: "ดินดอนสามเหลี่ยม",    topicIds: ["mekong-delta","nile-delta","irrawaddy-delta-rice","red-river-delta-dikes","yangtze-delta","camargue-rhone-delta","ebro-delta","okavango-delta","nile-river"] },
+        { id: "braided-rivers", label: "แม่น้ำถักและกรวด",    topicIds: ["braided-river-sediment-new-zealand","indus-floodplain"] },
+        { id: "waterfalls",     label: "น้ำตกและแก่ง",        topicIds: ["victoria-falls-gorge","iguazu-falls","mekong-rapids"] },
+      ]},
+      { id: "coastal-landforms", label: "ภูมิประเทศชายฝั่ง", icon: "anchor", subTopics: [
+        { id: "cliffs",        label: "หน้าผาชายฝั่ง",    topicIds: ["white-cliffs-dover","jurassic-coast"] },
+        { id: "lagoons",       label: "ลากูนและปากแม่น้ำ", topicIds: ["songkhla-lagoon-brackish","venice-lagoon","estuary-salt-wedge-mekong","bay-of-fundy-tides"] },
+        { id: "coastal-plain", label: "ที่ราบชายฝั่ง",    topicIds: ["eastern-seaboard-thailand","manila-bay","sundaland-shelf"] },
+      ]},
+    ]
+  },
+
+  {
+    id: "hydrology", label: "อุทกวิทยา", labelEn: "Hydrology",
+    icon: "droplets", color: "#1d4ed8", colorLight: "#dbeafe",
+    mainTopics: [
+      { id: "rivers", label: "แม่น้ำและลุ่มน้ำ", icon: "waves", subTopics: [
+        { id: "major-rivers",  label: "แม่น้ำสายใหญ่",   topicIds: ["chao-phraya","amazon","nile-river","danube-basin","rhine-river-corridor","mekong-dams-sediment","reservoir-operation-chao-phraya"] },
+        { id: "transboundary", label: "ลุ่มน้ำข้ามชาติ", topicIds: ["colorado-river-delta-restoration","murray-darling-water-allocation","murray-darling-basin","rhine-snowmelt-flood","ganges-brahmaputra-saltwater-intrusion"] },
+        { id: "flood-pulse",   label: "อุทกพลวัต",       topicIds: ["mekong-flood-pulse","okavango-flood-pulse-hydrology","tonle-sap","wadi-bani-khalid-flash-flood","flash-flood-hydrograph-wadi","thailand-monsoon-onset"] },
+        { id: "river-health",  label: "สุขภาพแม่น้ำ",    topicIds: ["hyporheic-zone-river-health","estuary-salt-wedge-mekong","bangladesh-river-chars"] },
+      ]},
+      { id: "lakes", label: "ทะเลสาบ", icon: "circle", subTopics: [
+        { id: "tectonic-lakes", label: "ทะเลสาบธรณีแปร",   topicIds: ["lake-baikal","lake-baikal-deep-water","lake-victoria","lake-titicaca"] },
+        { id: "closed-lakes",   label: "ทะเลสาบแอ่งปิด",   topicIds: ["aral-sea","aral-sea-shrinkage","dead-sea-rift-lake","caspian-sea-closed-basin","lake-chad","lake-chad-sahel"] },
+        { id: "great-lakes",    label: "ทะเลสาบน้ำจืดใหญ่", topicIds: ["north-american-great-lakes","lake-baikal","imja-glof-himalaya"] },
+      ]},
+      { id: "groundwater", label: "น้ำบาดาล", icon: "layers", subTopics: [
+        { id: "aquifers",     label: "ชั้นน้ำบาดาล",    topicIds: ["ogallala-aquifer-water","ogallala-recharge-depletion","great-artesian-basin"] },
+        { id: "desert-water", label: "น้ำในทะเลทราย",   topicIds: ["oman-falaj-qanat","al-hasa-oasis","siwa-oasis","groundwater-subsidence-bangkok"] },
+      ]},
+      { id: "water-management", label: "การจัดการน้ำ", icon: "settings", subTopics: [
+        { id: "dams",       label: "เขื่อนและอ่างเก็บน้ำ", topicIds: ["three-gorges-dam","nile-flood-aswan-deep-dive","mekong-dams-sediment","colorado-river-delta-restoration"] },
+        { id: "polders",    label: "โพลเดอร์และชลประทาน", topicIds: ["netherlands-polder","netherlands-polders","netherlands-polder-system","bali-subak-irrigation","xochimilco-chinampas","mae-klong-salt-pans"] },
+        { id: "urban-water","label": "น้ำในเมือง",        topicIds: ["venice-acqua-alta-barriers","rotterdam-room-for-river","urban-stormwater-copenhagen","sponge-city-wuhan","los-angeles-river-channel","drought-hydrology-cape-town"] },
+      ]},
+    ]
+  },
+
+  {
+    id: "oceanography", label: "สมุทรศาสตร์", labelEn: "Oceanography",
+    icon: "waves", color: "#0e7490", colorLight: "#cffafe",
+    mainTopics: [
+      { id: "ocean-currents", label: "กระแสน้ำมหาสมุทร", icon: "repeat", subTopics: [
+        { id: "surface-currents", label: "กระแสน้ำผิว",     topicIds: ["gulf-stream","kuroshio-current-japan","labrador-current-fog"] },
+        { id: "thermohaline",     label: "เทอร์โมฮาไลน์",   topicIds: ["thermohaline-circulation","sargasso-sea-gyre"] },
+      ]},
+      { id: "deep-ocean", label: "มหาสมุทรลึก", icon: "arrow-down", subTopics: [
+        { id: "trenches-ridges", label: "ร่องลึกและสันเขา", topicIds: ["mariana-trench","mariana-trench-hadal-deep-dive","mid-atlantic-ridge-seafloor"] },
+      ]},
+      { id: "seas-straits", label: "ทะเลและช่องแคบ", icon: "navigation", subTopics: [
+        { id: "semi-enclosed", label: "ทะเลกึ่งปิด",       topicIds: ["mediterranean","baltic-sea","baltic-sea-brackish","caspian-sea-closed-basin"] },
+        { id: "straits",       label: "ช่องแคบ",           topicIds: ["strait-of-malacca","bosphorus-strait","suez-canal-trade-route","panama-canal"] },
+        { id: "tides-bays",    label: "น้ำขึ้นลงและอ่าว",  topicIds: ["bay-of-fundy-tides","sundaland-shelf","bay-of-bengal-cyclone"] },
+      ]},
+      { id: "coasts-reefs", label: "ชายฝั่งและปะการัง", icon: "anchor", subTopics: [
+        { id: "coral-reefs",      label: "แนวปะการัง",         topicIds: ["great-barrier","great-barrier-reef-system","maldives","maldives-atolls","enso-coral-bleaching-pacific"] },
+        { id: "mangroves-lagoons","label": "ป่าชายเลนและลากูน", topicIds: ["sundarbans","sundarbans-cyclone-adaptation","songkhla-lagoon-brackish","venice-lagoon"] },
+        { id: "islands",          label: "เกาะและอะทอลล์",     topicIds: ["galapagos","socotra-island","socotra-island-endemism"] },
+      ]},
+    ]
+  },
+
+  {
+    id: "climatology", label: "ภูมิอากาศวิทยา", labelEn: "Climatology",
+    icon: "cloud-sun", color: "#7c3aed", colorLight: "#ede9fe",
+    mainTopics: [
+      { id: "climate-zones", label: "เขตภูมิอากาศ", icon: "globe-2", subTopics: [
+        { id: "tropical",        label: "ร้อนชื้น",          topicIds: ["amazon","congo-basin","borneo-rainforest","monteverde-cloud-forest"] },
+        { id: "arid-zones",      label: "แห้งแล้ง",          topicIds: ["sahara","rub-al-khali-erg","atacama","gobi","sonoran-saguaro-desert"] },
+        { id: "temperate",       label: "อบอุ่น",            topicIds: ["mediterranean","cape-town-mediterranean","british-isles-oceanic","new-zealand-oceanic","bay-area-microclimate"] },
+        { id: "subpolar-polar",  label: "กึ่งขั้วโลก-ขั้วโลก", topicIds: ["siberian-taiga","tundra","svalbard-tundra","lapland-reindeer-climate"] },
+        { id: "mountain-climate","label": "ภูมิอากาศภูเขา",  topicIds: ["kilimanjaro","kilimanjaro-altitude-zones","doi-inthanon","everest-base-camp-trail","andean-paramo-water","mount-kenya"] },
+      ]},
+      { id: "climate-phenomena", label: "ปรากฏการณ์ภูมิอากาศ", icon: "activity", subTopics: [
+        { id: "enso",            label: "ENSO",              topicIds: ["enso-pacific-warm-pool","el-nino-pacific","el-nino-peru-upwelling","la-nina-australia-floods","walker-circulation-pacific","thailand-enso-teleconnection","enso-coral-bleaching-pacific","enso-pacific-warm-pool"] },
+        { id: "monsoon",         label: "มรสุม",             topicIds: ["thai-monsoon","western-ghats-monsoon","thailand-monsoon-onset","mjo-maritime-continent","mekong-flood-pulse"] },
+        { id: "teleconnections", label: "IOD / MJO / Hadley", topicIds: ["indian-ocean-dipole-horn-africa","hadley-cell-trade-winds","itcz-rain-belt","cold-pool-thunderstorm-outflow"] },
+        { id: "wind-systems",    label: "ระบบลมและฝนเงา",   topicIds: ["patagonia-westerlies","patagonia-rain-shadow-westerlies","olympic-rain-shadow","great-dividing-range","australian-great-dividing-range","atmospheric-river-california"] },
+      ]},
+      { id: "local-climate", label: "ภูมิอากาศท้องถิ่น", icon: "building-2", subTopics: [
+        { id: "urban-climate", label: "ภูมิอากาศเมือง",  topicIds: ["bangkok-heat","singapore-urban-heat","tokyo","chiang-mai-basin-smog","sichuan-basin-fog","hong-kong-urban-canyon-wind"] },
+        { id: "coastal-fog",   label: "หมอกและชายฝั่ง",  topicIds: ["labrador-current-fog","namib-fog-desert","hokkaido-snow","medellin-valley-urban-climate"] },
+      ]},
+      { id: "climate-change", label: "การเปลี่ยนแปลงภูมิอากาศ", icon: "trending-up", subTopics: [
+        { id: "cryosphere-loss", label: "น้ำแข็งละลาย",       topicIds: ["arctic-sea-ice-albedo","greenland-ice-sheet-mass-balance","alps-glacier-retreat","himalaya-snowline-shift","patagonian-icefields","himalaya-rain-on-snow"] },
+        { id: "permafrost",      label: "เพอร์มาฟรอสต์",      topicIds: ["siberian-permafrost","yakutsk-permafrost-city"] },
+        { id: "sea-level-rise",  label: "ระดับน้ำทะเลสูง",    topicIds: ["miami-sunny-day-flooding","maldives","venice-acqua-alta-barriers","jakarta-subsidence"] },
+        { id: "heatwaves",       label: "คลื่นความร้อนและภัยแล้ง", topicIds: ["cape-town-day-zero-drought","athens-heatwave-urban-risk","drought-hydrology-cape-town"] },
+      ]},
+    ]
+  },
+
+  {
+    id: "ecology", label: "นิเวศวิทยา", labelEn: "Ecology & Biogeography",
+    icon: "trees", color: "#16a34a", colorLight: "#f0fdf4",
+    mainTopics: [
+      { id: "tropical-biomes", label: "ระบบนิเวศเขตร้อน", icon: "tree-palm", subTopics: [
+        { id: "tropical-forests",  label: "ป่าฝนเขตร้อน",      topicIds: ["amazon","congo-basin","borneo-rainforest","java-volcanic-soils","kinabalu-altitude-biodiversity"] },
+        { id: "cloud-forests",     label: "ป่าเมฆ",            topicIds: ["monteverde-cloud-forest","western-ghats-monsoon"] },
+        { id: "savannas",          label: "สะวันนาและทุ่งหญ้า", topicIds: ["serengeti","serengeti-savanna","brazil-cerrado-ecotone","sahel"] },
+        { id: "tropical-wetlands", label: "พื้นที่ชุ่มน้ำเขตร้อน", topicIds: ["everglades","everglades-wetland","pantanal","pantanal-wetland","okavango-delta","okavango-seasonal-flood","tonle-sap"] },
+      ]},
+      { id: "temperate-polar-biomes", label: "ระบบนิเวศอบอุ่น-ขั้วโลก", icon: "trees", subTopics: [
+        { id: "boreal-tundra",    label: "ป่าสนและทุนดรา",    topicIds: ["siberian-taiga","canadian-boreal-fire-climate","tundra","svalbard-tundra","antarctic-dry-valleys","lapland-reindeer-climate"] },
+        { id: "grasslands",       label: "ทุ่งหญ้าอบอุ่น",    topicIds: ["great-plains","canadian-prairies","ukraine-black-soil-grain","central-asian-steppe"] },
+        { id: "temperate-forest", label: "ป่าอบอุ่น",         topicIds: ["valdivian-temperate-rainforest","blue-mountains-bushfire","great-dividing-range"] },
+      ]},
+      { id: "marine-biomes", label: "ระบบนิเวศทะเล", icon: "fish", subTopics: [
+        { id: "coral-reefs-eco", label: "แนวปะการัง",       topicIds: ["great-barrier-reef-system","maldives-atolls","enso-coral-bleaching-pacific"] },
+        { id: "kelp-seagrass",   label: "เคลป์และหญ้าทะเล", topicIds: ["monterey-kelp-forest","shark-bay-seagrass"] },
+        { id: "mangroves-eco",   label: "ป่าชายเลน",        topicIds: ["sundarbans","sundarbans-cyclone-adaptation","mekong-delta"] },
+      ]},
+      { id: "biodiversity", label: "ความหลากหลายทางชีวภาพ", icon: "dna", subTopics: [
+        { id: "island-endemic",  label: "เกาะและสปีชีส์เฉพาะถิ่น", topicIds: ["galapagos","madagascar","madagascar-biodiversity","socotra-island","socotra-island-endemism"] },
+        { id: "altitude-biodiv", label: "ความหลากหลายตามระดับสูง", topicIds: ["kilimanjaro-altitude-zones","kinabalu-altitude-biodiversity","andean-paramo-water"] },
+        { id: "ecotones",        label: "อีโคโทนและขอบเขต",        topicIds: ["brazil-cerrado-ecotone","lake-chad-sahel","patagonia-rain-shadow-westerlies"] },
+        { id: "land-use",        label: "การใช้ที่ดินและการทำลาย", topicIds: ["borneo-palm-oil-frontier","sumatra-peat-fire","ethiopia-coffee-highlands","thung-kula-ronghai-jasmine-rice"] },
+      ]},
+    ]
+  },
+
+  {
+    id: "human-geography", label: "ภูมิศาสตร์มนุษย์", labelEn: "Human Geography",
+    icon: "building-2", color: "#be185d", colorLight: "#fce7f3",
+    mainTopics: [
+      { id: "urban", label: "ภูมิศาสตร์เมือง", icon: "building", subTopics: [
+        { id: "delta-cities",      label: "เมืองสามเหลี่ยมปากแม่น้ำ", topicIds: ["bangkok-heat","jakarta-subsidence","yangtze-delta","new-orleans-delta","cairo-nile-urban-heat","groundwater-subsidence-bangkok"] },
+        { id: "port-cities",       label: "เมืองท่าเรือ",             topicIds: ["singapore-urban-geography","dubai-desert-city","tokyo-bay-reclamation","singapore-land-reclamation-waterfront","jebel-ali-port-logistics"] },
+        { id: "arid-cities",       label: "เมืองในทะเลทราย",          topicIds: ["urban-sprawl-phoenix","riyadh-oasis-urban","dubai-desert-city","dubai-desalination-water"] },
+        { id: "adaptation-cities", label: "การปรับตัวของเมือง",        topicIds: ["venice-acqua-alta-barriers","rotterdam-room-for-river","sponge-city-wuhan","urban-stormwater-copenhagen","medellin-valley-urban-climate"] },
+      ]},
+      { id: "agriculture", label: "ภูมิศาสตร์เกษตร", icon: "wheat", subTopics: [
+        { id: "rice-paddy",       label: "นาข้าวและชลประทาน",  topicIds: ["bali-subak-irrigation","irrawaddy-delta-rice","thung-kula-ronghai-jasmine-rice","red-river-delta-dikes"] },
+        { id: "terrace-farming",  label: "เกษตรขั้นบันได",    topicIds: ["rice-terraces-banaue","ifugao-rice-terraces","machu-picchu","colca-canyon-terraces","ethiopian-highlands-soil-terraces"] },
+        { id: "dryland-farming",  label: "เกษตรแห้งแล้ง",     topicIds: ["ukraine-black-soil-grain","almeria-greenhouse-agriculture","ethiopia-coffee-highlands","mae-klong-salt-pans"] },
+        { id: "historical-land",  label: "การใช้ที่ดินประวัติ", topicIds: ["xochimilco-chinampas","nile-river","mesopotamia-alluvial-plain","indus-floodplain"] },
+      ]},
+      { id: "resources", label: "ทรัพยากรและพลังงาน", icon: "zap", subTopics: [
+        { id: "energy-minerals", label: "พลังงานและแร่ธาตุ", topicIds: ["north-sea-oil-platforms","north-sea-offshore-wind","copperbelt","atacama-lithium-brine"] },
+        { id: "water-resource",  label: "น้ำในฐานะทรัพยากร", topicIds: ["ogallala-aquifer-water","dubai-desalination-water","cape-town-day-zero-drought","great-artesian-basin"] },
+      ]},
+      { id: "infrastructure", label: "โครงสร้างพื้นฐาน", icon: "git-merge", subTopics: [
+        { id: "trade-routes",  label: "เส้นทางการค้า",   topicIds: ["suez-canal-trade-route","strait-of-malacca","jebel-ali-port-logistics","panama-canal","rhine-ruhr"] },
+        { id: "engineering",   label: "โครงสร้างพิเศษ",  topicIds: ["three-gorges-dam","netherlands-polder-system","tokyo-bay-reclamation","singapore-land-reclamation-waterfront","chernobyl-exclusion-zone"] },
+      ]},
+    ]
+  },
+
+  {
+    id: "natural-hazards", label: "ภัยธรรมชาติ", labelEn: "Natural Hazards",
+    icon: "triangle-alert", color: "#dc2626", colorLight: "#fee2e2",
+    mainTopics: [
+      { id: "seismic", label: "แผ่นดินไหวและสึนามิ", icon: "activity", subTopics: [
+        { id: "earthquakes", label: "แผ่นดินไหว", topicIds: ["san-andreas-fault","christchurch-liquefaction","ring-of-fire","ring-of-fire-indonesia"] },
+        { id: "tsunamis",    label: "สึนามิ",      topicIds: ["indian-ocean-tsunami","cascadia-tsunami-evacuation"] },
+      ]},
+      { id: "volcanic-hazards", label: "ภัยภูเขาไฟ", icon: "flame", subTopics: [
+        { id: "eruptions-ash", label: "การปะทุและเถ้า",   topicIds: ["pinatubo","etna-ashfall-sicily","mount-st-helens"] },
+        { id: "lahars-lava",   label: "ลาฮาร์และลาวา",   topicIds: ["lahar-merapi","la-palma-lava-delta"] },
+      ]},
+      { id: "hydro-hazards", label: "อุทกภัยและดินถล่ม", icon: "droplets", subTopics: [
+        { id: "floods",     label: "น้ำท่วม",          topicIds: ["mekong-flood-pulse","mississippi-floodplain","bangladesh-river-chars","flash-flood-hydrograph-wadi","wadi-bani-khalid-flash-flood"] },
+        { id: "landslides", label: "ดินถล่มและ GLOF",  topicIds: ["nepal-landslide","hong-kong-landslides","imja-glof-himalaya"] },
+        { id: "subsidence", label: "การทรุดตัว",       topicIds: ["jakarta-subsidence","groundwater-subsidence-bangkok"] },
+      ]},
+      { id: "storms", label: "พายุ", icon: "wind", subTopics: [
+        { id: "tropical-cyclones", label: "พายุหมุนเขตร้อน", topicIds: ["bay-of-bengal-cyclone","hainan-typhoon-coast","galveston-storm-surge","sundarbans-cyclone-adaptation"] },
+        { id: "tornadoes",         label: "ทอร์นาโด",        topicIds: ["oklahoma-tornado-alley","tornado-alley","great-plains-tornado-risk"] },
+      ]},
+      { id: "drought-fire", label: "ภัยแล้งและไฟป่า", icon: "sun", subTopics: [
+        { id: "wildfires", label: "ไฟป่า",     topicIds: ["california-wildfire","wui-california-fire-risk","blue-mountains-bushfire","canadian-boreal-fire-climate","sumatra-peat-fire"] },
+        { id: "drought",   label: "ภัยแล้ง",   topicIds: ["cape-town-day-zero-drought","drought-hydrology-cape-town","oklahoma-dust-bowl","sahel","lake-chad-sahel"] },
+      ]},
+    ]
+  },
+];
+
+// Build inverse index: topicId → [{disciplineId, mainTopicId, subTopicId}]
+const TOPIC_TAXONOMY_MAP = {};
+(function buildTopicTaxonomyMap() {
+  TAXONOMY.forEach((disc) => {
+    disc.mainTopics.forEach((main) => {
+      main.subTopics.forEach((sub) => {
+        sub.topicIds.forEach((id) => {
+          if (!TOPIC_TAXONOMY_MAP[id]) TOPIC_TAXONOMY_MAP[id] = [];
+          TOPIC_TAXONOMY_MAP[id].push({ disciplineId: disc.id, mainTopicId: main.id, subTopicId: sub.id });
+        });
+      });
+    });
+  });
+})();
+
+// ─── Quick Search Keywords ─────────────────────────────────────────────────────
+
 const quickSearches = [
   "ภูเขาไฟ",
   "มรสุม",
@@ -7955,6 +8197,11 @@ const categories = ["ทั้งหมด", ...new Set(topics.map((topic) => to
 let activeCategory = "ทั้งหมด";
 let activeTopic = topics[0];
 let topicPage = 0;
+
+// Taxonomy navigation state
+let activeDisciplineId = null;
+let activeMainTopicId  = null;
+let activeSubTopicId   = null;
 const TOPICS_PER_PAGE = 48;
 let map;
 let clusterGroup;
@@ -7971,6 +8218,8 @@ const topicGrid = document.querySelector("#topicGrid");
 const filterGroup = document.querySelector("#filterGroup");
 const categoryOverview = document.querySelector("#categoryOverview");
 const quickSearchGroup = document.querySelector("#quickSearchGroup");
+const disciplineNav = document.querySelector("#disciplineNav");
+const disciplinePanel = document.querySelector("#disciplinePanel");
 const searchInput = document.querySelector("#searchInput");
 const storyReader = document.querySelector("#storyReader");
 const topicCount = document.querySelector("#topicCount");
@@ -8148,52 +8397,144 @@ function updateStats() {
 }
 
 function createFilters() {
-  filterGroup.innerHTML = categories
-    .map(
-      (category) => `
-        <button class="filter-chip${category === activeCategory ? " active" : ""}" type="button" data-category="${category}">
-          ${category}
-        </button>
-      `,
-    )
-    .join("");
+  // Legacy stub — discipline navigation is now rendered by renderDisciplineNav()
+}
 
-  filterGroup.querySelectorAll("button").forEach((button) => {
-    button.addEventListener("click", () => {
-      activeCategory = button.dataset.category;
-      createFilters();
+// ─── Discipline Navigation ─────────────────────────────────────────────────────
+
+function renderDisciplineNav() {
+  if (!disciplineNav) return;
+  disciplineNav.innerHTML = [
+    `<button class="disc-pill${activeDisciplineId === null ? " active" : ""}" type="button" data-disc-id="" style="--disc-color:#374151">ทั้งหมด</button>`,
+    ...TAXONOMY.map(d => `<button class="disc-pill${activeDisciplineId === d.id ? " active" : ""}" type="button" data-disc-id="${d.id}" style="--disc-color:${d.color}">${d.label}</button>`)
+  ].join("");
+
+  disciplineNav.querySelectorAll(".disc-pill").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      activeDisciplineId = btn.dataset.discId || null;
+      activeMainTopicId  = null;
+      activeSubTopicId   = null;
+      topicPage = 0;
+      renderDisciplineNav();
+      renderDisciplinePanel();
+      updateFilterBreadcrumb();
+      renderCategoryOverview();
       renderTopics();
     });
   });
 }
 
+function renderDisciplinePanel() {
+  if (!disciplinePanel) return;
+  if (!activeDisciplineId) { disciplinePanel.hidden = true; return; }
+
+  const disc = TAXONOMY.find(d => d.id === activeDisciplineId);
+  if (!disc) { disciplinePanel.hidden = true; return; }
+
+  const mainTabsHtml = disc.mainTopics.map(m => `
+    <button class="main-topic-tab${activeMainTopicId === m.id ? " active" : ""}"
+      type="button" data-main-id="${m.id}"
+      style="--disc-color:${disc.color};--disc-light:${disc.colorLight}">${m.label}</button>
+  `).join("");
+
+  let subHtml = "";
+  if (activeMainTopicId) {
+    const main = disc.mainTopics.find(m => m.id === activeMainTopicId);
+    if (main) {
+      subHtml = `<div class="disc-sub-row">${main.subTopics.map(s => `
+        <button class="sub-topic-chip${activeSubTopicId === s.id ? " active" : ""}"
+          type="button" data-sub-id="${s.id}"
+          style="--disc-color:${disc.color}">${s.label}</button>
+      `).join("")}</div>`;
+    }
+  }
+
+  disciplinePanel.style.setProperty("--disc-color", disc.color);
+  disciplinePanel.innerHTML = `<div class="disc-main-row">${mainTabsHtml}</div>${subHtml}`;
+  disciplinePanel.hidden = false;
+
+  disciplinePanel.querySelectorAll(".main-topic-tab").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      activeMainTopicId = btn.dataset.mainId === activeMainTopicId ? null : btn.dataset.mainId;
+      activeSubTopicId  = null;
+      topicPage = 0;
+      renderDisciplinePanel();
+      updateFilterBreadcrumb();
+      renderTopics();
+    });
+  });
+  disciplinePanel.querySelectorAll(".sub-topic-chip").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      activeSubTopicId = btn.dataset.subId === activeSubTopicId ? null : btn.dataset.subId;
+      topicPage = 0;
+      renderDisciplinePanel();
+      updateFilterBreadcrumb();
+      renderTopics();
+    });
+  });
+}
+
+function updateFilterBreadcrumb() {
+  if (!filterGroup) return;
+  if (!activeDisciplineId) { filterGroup.hidden = true; return; }
+
+  const disc = TAXONOMY.find(d => d.id === activeDisciplineId);
+  const main = disc?.mainTopics.find(m => m.id === activeMainTopicId);
+  const sub  = main?.subTopics.find(s => s.id === activeSubTopicId);
+  const parts = [disc?.label, main?.label, sub?.label].filter(Boolean);
+
+  filterGroup.innerHTML = `
+    <span class="fb-path">${parts.join(" › ")}</span>
+    <button class="fb-clear" type="button" title="ล้างตัวกรอง">✕</button>
+  `;
+  filterGroup.hidden = false;
+
+  filterGroup.querySelector(".fb-clear").addEventListener("click", () => {
+    activeDisciplineId = null;
+    activeMainTopicId  = null;
+    activeSubTopicId   = null;
+    topicPage = 0;
+    renderDisciplineNav();
+    renderDisciplinePanel();
+    updateFilterBreadcrumb();
+    renderCategoryOverview();
+    renderTopics();
+  });
+}
+
 function renderCategoryOverview() {
   if (!categoryOverview) return;
+  if (activeDisciplineId) { categoryOverview.hidden = true; return; }
 
-  const categoryCards = categories
-    .filter((category) => category !== "ทั้งหมด")
-    .map((category) => {
-      const count = topics.filter((topic) => topic.category === category).length;
-      const sample = topics.find((topic) => topic.category === category);
-      return `
-        <button class="category-stat" type="button" data-category="${category}">
-          <span>${category}</span>
-          <strong>${count}</strong>
-          <small>${sample?.subcategory || "หัวข้อ"}</small>
-        </button>
-      `;
-    })
-    .join("");
+  categoryOverview.innerHTML = TAXONOMY.map(disc => {
+    const count = disc.mainTopics.reduce((n, m) => n + m.subTopics.reduce((a, s) => a + s.topicIds.length, 0), 0);
+    const mainLabels = disc.mainTopics.slice(0, 3).map(m => m.label).join(" · ");
+    return `
+      <button class="category-stat disc-card" type="button" data-disc-id="${disc.id}"
+        style="--disc-color:${disc.color};--disc-light:${disc.colorLight}">
+        <span><i data-lucide="${disc.icon}"></i> ${disc.labelEn}</span>
+        <strong>${disc.label}</strong>
+        <small>${mainLabels}</small>
+      </button>
+    `;
+  }).join("");
 
-  categoryOverview.innerHTML = categoryCards;
-  categoryOverview.querySelectorAll("button").forEach((button) => {
-    button.addEventListener("click", () => {
-      activeCategory = button.dataset.category;
-      createFilters();
+  categoryOverview.hidden = false;
+  categoryOverview.querySelectorAll("button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      activeDisciplineId = btn.dataset.discId;
+      activeMainTopicId  = null;
+      activeSubTopicId   = null;
+      topicPage = 0;
+      renderDisciplineNav();
+      renderDisciplinePanel();
+      updateFilterBreadcrumb();
+      renderCategoryOverview();
       renderTopics();
       document.querySelector("#library").scrollIntoView({ behavior: "smooth", block: "start" });
     });
   });
+  refreshIcons();
 }
 
 function renderQuickSearches() {
@@ -8240,10 +8581,22 @@ searchInput?.addEventListener("focus", () => {
 function getVisibleTopics() {
   const query = searchInput.value.trim().toLowerCase();
   return topics.filter((topic) => {
-    const matchesCategory = activeCategory === "ทั้งหมด" || topic.category === activeCategory;
+    // Taxonomy filter (discipline → mainTopic → subTopic)
+    if (activeDisciplineId !== null) {
+      const entries = TOPIC_TAXONOMY_MAP[topic.id] || [];
+      const match = entries.find(e => {
+        if (e.disciplineId !== activeDisciplineId) return false;
+        if (activeMainTopicId && e.mainTopicId !== activeMainTopicId) return false;
+        if (activeSubTopicId  && e.subTopicId  !== activeSubTopicId)  return false;
+        return true;
+      });
+      if (!match) return false;
+    }
+    // Text search
+    if (!query) return true;
     const searchableText =
       `${topic.title} ${topic.category} ${topic.subcategory} ${topic.location} ${topic.summary} ${topic.story} ${topic.scale} ${topic.keyConcept} ${topic.climate} ${topic.whyItMatters} ${topic.points.join(" ")}`.toLowerCase();
-    return matchesCategory && searchableText.includes(query);
+    return searchableText.includes(query);
   });
 }
 
@@ -10467,7 +10820,18 @@ function showArticleView(topic) {
   articleView.hidden = false;
   document.getElementById("navBackBtn").hidden = false;
   const crumb = document.getElementById("articleBreadcrumb");
-  if (crumb) crumb.textContent = `${topic.category} / ${topic.subcategory}`;
+  if (crumb) {
+    const entries = TOPIC_TAXONOMY_MAP[topic.id] || [];
+    if (entries.length > 0) {
+      const e    = entries[0];
+      const disc = TAXONOMY.find(d => d.id === e.disciplineId);
+      const main = disc?.mainTopics.find(m => m.id === e.mainTopicId);
+      const sub  = main?.subTopics.find(s => s.id === e.subTopicId);
+      crumb.textContent = [disc?.label, main?.label, sub?.label].filter(Boolean).join(" › ");
+    } else {
+      crumb.textContent = `${topic.category} / ${topic.subcategory}`;
+    }
+  }
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 
@@ -10518,7 +10882,9 @@ if (hashId) {
 }
 
 updateStats();
-createFilters();
+renderDisciplineNav();
+renderDisciplinePanel();
+updateFilterBreadcrumb();
 renderCategoryOverview();
 renderQuickSearches();
 renderTopics();
